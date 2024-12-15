@@ -328,4 +328,4 @@ cli = ["click (>=5.0)"]
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.13"
-content-hash = "078a5708c61655478536be81e87261e1eff0c7b9cbd4842d51df47c2fdda8b39"
+content-hash = "79b4e632669f3b79d05492dae112c99c874bc96335c92018d397516e4764fb00"

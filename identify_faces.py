@@ -55,7 +55,7 @@ def identificar_rostos():
     nomes, encodings_banco = carregar_encodings()
 
     # Inicializa captura de vídeo
-    video_capture = cv2.VideoCapture(1)
+    video_capture = cv2.VideoCapture(0)
     video_capture.set(3, 1280)
     video_capture.set(4, 720)
 
