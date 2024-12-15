@@ -1,4 +1,5 @@
 import os
+import time
 
 import cv2
 import face_recognition
@@ -21,19 +22,29 @@ def conectar_banco():
 # Função para carregar os encodings do banco de dados
 def carregar_encodings():
     conn = conectar_banco()
+    # cursor para enviar comandos sql para o banco
     cursor = conn.cursor()
+    # executa um comando sql no banco de dados
     cursor.execute('SELECT nome, encoding FROM pessoas')
+    # recupera todos os resultados da consulta
     dados = cursor.fetchall()
+    # fecha a conexão com o banco
     conn.close()
 
+    # inicializando variaveis para receber uma lista de nomes e encodings do banco
     nomes = []
     encodings = []
 
+    # Laço que percorre os dados armazenado nas variaveis os resultados
     for nome, encoding_bin in dados:
         try:
             # Converte o encoding armazenado em binário para numpy array
+            # Importante para a comparação com os encodings dos frames
             encoding = np.frombuffer(encoding_bin, dtype=np.float64)
+            
+            # Condicional que verifica se cada encoding possui 128 informações faciais
             if encoding.shape == (128,):
+                # append - adiciona novos elementos no final da lista
                 nomes.append(nome)
                 encodings.append(encoding)
             else:
@@ -56,16 +67,21 @@ def identificar_rostos():
 
     # Inicializa captura de vídeo
     video_capture = cv2.VideoCapture(0)
+    # Redimensionando o tamanho do video 3 - largura / 4 altura
+    # !280 x 720 pixels
     video_capture.set(3, 1280)
     video_capture.set(4, 720)
 
+    # Condigional para verificar se a câmera está funcionando
     if not video_capture.isOpened():
         print('Erro ao acessar a câmera. Certifique-se de que ela está conectada e funcionando.')
         return
 
+    # Caso esteja funcionando, rodar a câmera
     while True:
         ret, frame = video_capture.read()
 
+        # Verifica se existem frames, caso contário desliga a câmera
         if not ret:
             print('Erro ao capturar o frame. Finalizando...')
             break
@@ -76,22 +92,30 @@ def identificar_rostos():
         # Converte o frame para RGB
         rgb_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
 
-        # Detecta localizações faciais
+        # Detecta localizações faciais com o modelo hog que é mais robusto que o cnn
         face_locations = face_recognition.face_locations(rgb_frame, model='hog')
 
         if not face_locations:
+            # mostra uma mensagem se um rosto não for detectado a cada 10 segundos
+            time.sleep(10)
             print('Nenhum rosto detectado neste frame.')
             continue
 
         # Calcula os encodings para os rostos detectados
         face_encodings = face_recognition.face_encodings(rgb_frame, face_locations, num_jitters=1)
 
+        # Iterando sobre as localizações e encodings das faces
         for (top, right, bottom, left), face_encoding in zip(face_locations, face_encodings):
+            # Comparando os encodings do frame com os encodings armazenados no bando de dados
             matches = face_recognition.compare_faces(encodings_banco, face_encoding, tolerance=0.6)
+            # Caso a comparação seja falsa, mostra o nome desconhecido na tela
             name = 'Desconhecido'
 
+            # Verifica se algum dos valores da lista 'matches' é verdadeiro
             if True in matches:
+                # Se o macthes é verdadeiro então retorar o nome para best macth index
                 best_match_index = matches.index(True)
+                # formata o nome mostrando apaenas o primeiro e segundo
                 name = formatar_nome(nomes[best_match_index])
 
             # Desenha retângulo ao redor do rosto

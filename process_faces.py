@@ -9,7 +9,7 @@ from PIL import Image
 # Carregar variáveis de ambiente do arquivo .env
 load_dotenv()
 
-# DIRETORIO COM AS IMAGENS DOS ALUNOS
+# Diretório onde armazenamos as subpastas com imagens dos alunos
 diretorio = 'imagens'
 
 # Função para criar o banco de dados, se não existir
@@ -67,36 +67,45 @@ print('Banco de dados e tabela criados com sucesso, ou já existiam.')
 conn = conectar_banco()
 cursor = conn.cursor()
 
-# LOOP PARA PERCORRER TODAS AS PASTAS DENTRO DO DIRETÓRIO "imagens"
+# Loop para percorrer todas as pastas no dirétorio princial "imagens"
+# listdir - lista todas as pastas dentro do diretorio principal
 for pasta in os.listdir(diretorio):
+    # contruindo o caminho do diretório
     pasta_path = os.path.join(diretorio, pasta)
 
-    # Verifica se é uma pasta (representando um aluno)
+    # isdir - verifica se é uma pasta (representando um aluno)
     if os.path.isdir(pasta_path):
+        # armazena o nome da pasta em uma variavel
         nome_aluno = pasta
 
-        # LOOP PARA PERCORRER TODAS AS IMAGENS DA PASTA DO ALUNO
+        # Loop para percorrer todas as imagens dentro da pasta do aluno
         for filename in os.listdir(pasta_path):
+            # passando as extensões das imagens que devem ser buscadas nos diretórios
             if filename.endswith('.jpg') or filename.endswith('.png'):
+                # contruindo o caminho do arquivo dentro do diretorio
                 imagem_path = os.path.join(pasta_path, filename)
                 
-                # REDIMENCIONANDO AS IMAGENS PARA ECONOMIA DE RECURSOS
+                # armazenando as imagens dentro de uma variavel
                 imagem = Image.open(imagem_path)
+                # redimensionando cada imagem para um tamanho 100 x 100
                 imagem = imagem.resize((100, 100))
 
-                # CONVERTENDO DE PILL PARA NUMPY
+                # Convertendo de PILL para Numpy
                 imagem = np.array(imagem)
 
-                # IDENTIFICAÇÃO DAS FACES NAS IMAGENS E REGISTRO DOS ENCODINGS
-                face_locations = face_recognition.face_locations(imagem, model='cnn')
+                # Detecta localizações faciais com o modelo hog que é mais robusto que o cnn
+                face_locations = face_recognition.face_locations(imagem, model='hog')
+                # Extraindo os dados faciais de cada imagem
                 encodings = face_recognition.face_encodings(imagem, face_locations, num_jitters=10)
 
+                # laço que percorre os encodings e verifica se o valor é maior que 0
+                # para não gastar recurso percorrendo dados vazios
                 if len(encodings) > 0:
                     for encoding in encodings:
-                        # CONVERTENDO O ENCODING PARA O FORMATO LONGBLOB
+                        # Convertendo os encodings para bytes
                         encoding_blob = encoding.tobytes()
 
-                        # INSERINDO DADOS NO BANCO DE DADOS
+                        # Inserindo o nome e os encodings de cada imagem no banco de dados
                         cursor.execute('''
                             INSERT INTO pessoas (nome, encoding)
                             VALUES (%s, %s)
@@ -107,6 +116,6 @@ for pasta in os.listdir(diretorio):
                 else:
                     print(f'Não foi possível encontrar face na imagem {filename}.')
 
-# FECHANDO A CONEXÃO COM O BANCO DE DADOS
+# Fechando a conexão com o banco de dados
 conn.close()
 print('Dados salvos com sucesso no banco de dados MySQL.')
