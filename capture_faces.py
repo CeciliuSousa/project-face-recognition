@@ -1,5 +1,6 @@
 import os
 import time
+
 import cv2
 
 # Configurar diretório base
