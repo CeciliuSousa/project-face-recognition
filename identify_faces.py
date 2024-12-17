@@ -92,7 +92,8 @@ def identificar_rostos():
         # Converte o frame para RGB
         rgb_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
 
-        # Detecta localizações faciais com o modelo hog que é mais robusto que o cnn
+        # Detecta localizações faciais com o modelo cnn que é mais robusto que o hog
+        # Face Recognition disponibiliza 3 modelos de detecção, sendo eles o cnn, hog e ResNet-34
         face_locations = face_recognition.face_locations(rgb_frame, model='hog')
 
         if not face_locations:
@@ -123,6 +124,7 @@ def identificar_rostos():
 
             # Exibe o nome abaixo do retângulo
             cv2.putText(frame, name, (left + 6, bottom - 6), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 255), 1)
+
 
         # Exibe o frame com a janela "Reconhecimento Facial"
         cv2.imshow('Reconhecimento Facial', frame)

@@ -94,7 +94,7 @@ for pasta in os.listdir(diretorio):
                 imagem = np.array(imagem)
 
                 # Detecta localizações faciais com o modelo hog que é mais robusto que o cnn
-                face_locations = face_recognition.face_locations(imagem, model='hog')
+                face_locations = face_recognition.face_locations(imagem, model='cnn')
                 # Extraindo os dados faciais de cada imagem
                 encodings = face_recognition.face_encodings(imagem, face_locations, num_jitters=10)
 
